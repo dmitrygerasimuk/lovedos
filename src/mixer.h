@@ -11,8 +11,7 @@
 #include <stdint.h>
 #include "source.h"
 
-int16_t const* mixer_getNextBlock(void);
 void mixer_play(source_t const *source);
-void mixer_mix(void);
+void mixer_mix(int16_t *outputBuffer, unsigned sampleCount);
 
 #endif

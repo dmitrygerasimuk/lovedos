@@ -19,11 +19,10 @@
 
 #define SOUNDBLASTER_SAMPLES_PER_BUFFER 2048
 
-typedef int16_t const* (*soundblaster_getSampleProc)(void);
+typedef void (*soundblaster_getSampleProc)(int16_t *sampleBuffer, unsigned sampleCount);
 
 int soundblaster_init(soundblaster_getSampleProc sampleproc);
 void soundblaster_deinit(void);
 int soundblaster_getSampleRate(void);
-int soundblaster_getSampleBufferSize(void);
 
 #endif

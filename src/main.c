@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   /* Init everything */
   atexit(deinit);
-  soundblaster_init(mixer_getNextBlock);
+  soundblaster_init(mixer_mix);
   vga_init();
   palette_init();
   keyboard_init();

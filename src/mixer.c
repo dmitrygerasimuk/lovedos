@@ -23,14 +23,6 @@ typedef struct {
 
 static mixed_sound_t sources[MIXER_MAX_SOURCES];
 static int           activeSources                         = 0;
-static int16_t       data[SOUNDBLASTER_SAMPLES_PER_BUFFER] = {0};
-static bool          canmix                                = true;
-
-
-int16_t const * mixer_getNextBlock(void) {
-  canmix = true;
-  return data;
-}
 
 
 void mixer_play(source_t const *source) {
@@ -62,24 +54,20 @@ static inline int16_t mix(int32_t a, int32_t b) {
 }
 
 
-void mixer_mix(void) {
-  if(!canmix) {
-    return;
-  }
-
-  memset(data, 0, SOUNDBLASTER_SAMPLES_PER_BUFFER * sizeof(int16_t));
+void mixer_mix(int16_t *outputBuffer, unsigned sampleCount) {
+  memset(outputBuffer, 0, sampleCount * sizeof(int16_t));
 
   for(int i = 0; i < activeSources; ++i) {
     mixed_sound_t *snd = sources + i;
     int len = snd->source->sampleCount - snd->offset;
     int16_t const* sourceBuf = snd->source->samples + snd->offset;
 
-    if(len > SOUNDBLASTER_SAMPLES_PER_BUFFER) {
-      len = SOUNDBLASTER_SAMPLES_PER_BUFFER;
+    if(len > sampleCount) {
+      len = sampleCount;
     }
 
     for(int offset = 0; offset < len; ++offset) {
-      data[offset] = mix(data[offset], sourceBuf[offset]);
+      outputBuffer[offset] = mix(outputBuffer[offset], sourceBuf[offset]);
     }
 
     snd->offset += len;
@@ -92,6 +80,4 @@ void mixer_mix(void) {
       --activeSources;
     }
   }
-
-  canmix = false;
 }

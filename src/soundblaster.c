@@ -18,8 +18,8 @@
 
 #define BYTE(val, byte) (((val) >> ((byte) * 8)) & 0xFF)
 
-#define SOUNDBLASTER_SAMPLES_PER_BUFFER 2048
-#define SAMPLE_BUFFER_SIZE (SOUNDBLASTER_SAMPLES_PER_BUFFER * sizeof(uint16_t) * 2)
+#define SAMPLES_PER_BUFFER 512
+#define SAMPLE_BUFFER_SIZE (SAMPLES_PER_BUFFER * sizeof(uint16_t) * 2)
 #define SAMPLE_RATE 22050
 
 
@@ -84,7 +84,7 @@ static const struct  {
 };
 
 static volatile int  stopDma = 0;
-static uint16_t     *sampleBuffer;
+static int16_t      *sampleBuffer;
 static int           sampleBufferSelector;
 static uint16_t      baseAddress;
 static uint16_t      irq;
@@ -155,10 +155,9 @@ static void soundblasterISR(void) {
       writeDSP(BLASTER_EXIT_AUTO_DMA);
       stopDma = 2;
     } else {
-      uint8_t* dst = (uint8_t*)(sampleBuffer)
-        + writePage * SAMPLE_BUFFER_SIZE / 2;
+      int16_t *dst = sampleBuffer + writePage * SAMPLES_PER_BUFFER;
 
-      memcpy(dst, getSamples(), SAMPLE_BUFFER_SIZE / 2);
+      getSamples(dst, SAMPLES_PER_BUFFER);
 
       writePage = 1 - writePage;
       inportb(baseAddress + BLASTER_INTERRUPT_ACKNOWLEDGE_16BIT);
@@ -236,7 +235,7 @@ static int allocSampleBuffer(void) {
 
     // The DMA buffer must not cross a 64k boundary
     if(bufferPhys % 0x10000 < 0x10000 - SAMPLE_BUFFER_SIZE) {
-      sampleBuffer = (uint16_t*)bufferPhys;
+      sampleBuffer = (int16_t*)bufferPhys;
       memset(sampleBuffer, 0, SAMPLE_BUFFER_SIZE);
       sampleBufferSelector = selectors[current];
       --current;
@@ -400,9 +399,4 @@ void soundblaster_deinit(void) {
 
 int soundblaster_getSampleRate(void) {
   return SAMPLE_RATE;
-}
-
-
-int soundblaster_getSampleBufferSize(void) {
-  return SOUNDBLASTER_SAMPLES_PER_BUFFER;
 }
